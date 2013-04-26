@@ -1,0 +1,118 @@
+#	Test for Device Input Controllers
+#	Input event test
+#
+#	1. Input test (touch event)
+launch ../tests/test-client @1 -width=720 -height=760 -color=0xffff2020 -postsleep=90 < ../tests/testdata/cl_surface3.dat 2> ../tests/testlog/test-client1.log
+sleep 0.5
+layer test-client@1 101
+move test-client@1 10 20
+show test-client@1
+sleep 0.3
+#
+event 55551 XY=1800,250
+sleep 0.1
+event 55551 XY=1780,260
+sleep 0.1
+event 55551 XY=1760,270
+sleep 0.1
+event 55551 XY=1740,280
+event 55551 XY=1720,300
+sleep 0.1
+event 55551 Button=Down
+sleep 0.1
+event 55551 XY=1710,310
+event 55551 XY=1712,308
+sleep 0.1
+event 55551 XY=1714,306
+event 55551 Button=Up
+sleep 1
+kill test-client@1
+sleep 2
+
+#	2. Input test (jyostick event)
+launch ../tests/test-client @2 -color=0xff20ff20 -postsleep=90 < ../tests/testdata/cl_surface3.dat 2> ../tests/testlog/test-client2.log
+sleep 0.3
+layer test-client@2 101
+move test-client@2 250 300
+show test-client@2
+sleep 0.2
+launch ../tests/test-client @3 -color=0xff2020ff -postsleep=90 < ../tests/testdata/cl_surface3.dat 2> ../tests/testlog/test-client3.log
+sleep 0.3
+layer test-client@3 101
+move test-client@3 400 400
+show test-client@3
+sleep 0.5
+# input switch event (only send to Weston)
+event 55552 UpDown=-1
+event 55552 UpDown=0
+event 55552 UpDown=1
+event 55552 UpDown=0
+
+event 55552 LeftRight=-1
+event 55552 LeftRight=0
+event 55552 LeftRight=1
+event 55552 LeftRight=0
+
+event 55552 Cross=1
+event 55552 Cross=0
+event 55552 Squere=1
+event 55552 Squere=0
+event 55552 Circle=1
+event 55552 Circle=0
+event 55552 Triangle=1
+event 55552 Triangle=0
+
+# assign input sw to application
+input_add DrivingForceGT 0 test-client@2
+input_add DrivingForceGT 1 test-client@3
+input_add DrivingForceGT 2 test-client@2
+input_add DrivingForceGT 3 test-client@3
+input_add DrivingForceGT 4 test-client@2
+input_add DrivingForceGT 5 test-client@3
+sleep 0.3
+
+# input switch event (send to Application)
+event 55552 UpDown=-1
+sleep 0.1
+event 55552 UpDown=0
+sleep 0.3
+event 55552 UpDown=1
+sleep 0.1
+event 55552 UpDown=0
+sleep 0.3
+
+event 55552 LeftRight=-1
+sleep 0.1
+event 55552 LeftRight=0
+sleep 0.3
+event 55552 LeftRight=1
+sleep 0.1
+event 55552 LeftRight=0
+sleep 0.3
+
+event 55552 Cross=1
+sleep 0.1
+event 55552 Cross=0
+sleep 0.1
+event 55552 Squere=1
+sleep 0.1
+event 55552 Squere=0
+sleep 0.1
+event 55552 Circle=1
+sleep 0.1
+event 55552 Circle=0
+sleep 0.1
+event 55552 Triangle=1
+sleep 0.1
+event 55552 Triangle=0
+sleep 1
+
+#
+kill test-client@2
+sleep 0.5
+kill test-client@3
+sleep 0.5
+#
+#	3. End of Test
+bye
+
