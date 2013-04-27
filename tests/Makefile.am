@@ -2,8 +2,7 @@ TESTS_ENVIRONMENT = $(SHELL) $(top_srcdir)/tests/weston-plugin-test
 
 export abs_builddir
 
-EFL_INCLUDE = `pkg-config --cflags ecore-evas ecore evas ecore-wayland elementary`
-AM_CFLAGS = $(GCC_CFLAGS) $(EFL_INCLUDE)
+AM_CFLAGS = $(GCC_CFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/src -DUNIT_TEST $(COMPOSITOR_CFLAGS)
 
 noinst_PROGRAMS =		\

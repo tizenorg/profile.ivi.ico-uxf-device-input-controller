@@ -28,6 +28,10 @@ AC_ARG_ENABLE(setuid-install, [  --enable-setuid-install],,
 	      enable_setuid_install=yes)
 AM_CONDITIONAL(ENABLE_SETUID_INSTALL, test x$enable_setuid_install = xyes)
 
+PKG_PROG_PKG_CONFIG
+
+PKG_CHECK_MODULES([GLIB], [glib-2.0])
+
 SHARED_LIBS=
 SHARED_CFLAGS=
 AC_SUBST(SHARED_LIBS)
