@@ -494,6 +494,11 @@ event_iterate(int uifd, int evfd)
                         push_event(&event);
                     }
                     if (ret > 0)   {
+                        event.type = EV_SYN;
+                        event.code = SYN_REPORT;
+                        event.value = 0;
+                        write(uifd, &event, sizeof(struct input_event));
+
                         event.type = EV_KEY;
                         event.code = BTN_LEFT;
                         event.value = 1;
