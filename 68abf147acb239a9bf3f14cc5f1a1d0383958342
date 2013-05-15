@@ -1,0 +1,10 @@
+Change-Id: I68abf147acb239a9bf3f14cc5f1a1d0383958342
+Code-Review+1: Rusty Lynch <rusty.lynch@intel.com>
+Verified+1: Rusty Lynch <rusty.lynch@intel.com>
+Code-Review+2: Makoto Shibata <shibata@mac.tec.toyota.co.jp>
+Verified+1: Makoto Shibata <shibata@mac.tec.toyota.co.jp>
+Submitted-by: Makoto Shibata <shibata@mac.tec.toyota.co.jp>
+Submitted-at: Tue, 14 May 2013 18:18:26 -0700
+Reviewed-on: https://review.tizen.org/gerrit/3478
+Project: profile/ivi/ico-uxf-device-input-controller
+Branch: refs/heads/2.0alpha-wayland
