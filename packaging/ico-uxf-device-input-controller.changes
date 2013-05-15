@@ -1,3 +1,7 @@
+* Wed May 15 2013 Nakamura Hayato <hayato.nakamura@mail.toyota-td.jp> accepted/2.0alpha-wayland/20130426.191411@68abf14
+- Bug Fix.
+- I68abf147:Correctly use autoconf to detect CFLAGS/LIBS
+
 * -------------------------------------------------------------------
 Fri Apr 26 19:12:45 UTC 2013 - tracy.graydon@intel.com
 - Setting up 2.0alpha-wayland branch (master not used for IVI) 
