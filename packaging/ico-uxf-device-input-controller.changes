@@ -1,3 +1,9 @@
+* Fri May 24 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130520.093314@de73166
+- 0.5.03 release
+- fixed Because there is a problem same as a bug appointed in TIVI-974([WLD]Failed to execute Ico-uxf-weston-plugin test script with error "No testlog directory")
+  Create testlog directory in an examination script.
+  - Appoint that more than ico-uxf-weston-plugin-0.5.03 are necessary for spec file.
+
 * Wed May 22 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130520.093314@6b69154
 - 0.5.02 release
 - Fix for TIVI-831 - [WLD] Touch event always acted on previous location
