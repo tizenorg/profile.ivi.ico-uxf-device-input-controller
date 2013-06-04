@@ -1,6 +1,6 @@
 Name:       ico-uxf-device-input-controller
 Summary:    Device Input Controller
-Version:    0.5.03
+Version:    0.5.04
 Release:    1.1
 Group:      System/GUI
 License:    Apache License, Version 2.0
@@ -12,9 +12,9 @@ BuildRequires: pkgconfig(wayland-egl)
 BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(glib-2.0)
-BuildRequires: ico-uxf-weston-plugin-devel >= 0.5.03
+BuildRequires: ico-uxf-weston-plugin-devel >= 0.5.04
 Requires: weston >= 1.0
-Requires: ico-uxf-weston-plugin >= 0.5.03
+Requires: ico-uxf-weston-plugin >= 0.5.04
 
 %description
 Device Input Controller for ico-uxf-weston-plugin(Multi Input Manager)

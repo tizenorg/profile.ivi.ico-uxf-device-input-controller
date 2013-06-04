@@ -15,7 +15,12 @@
 #include "ico_ictl-touch_egalax.h"
 
 /* Number of times to repeat a touch about each point   */
-#define CALIBCONF_READ_NUM    (5)
+#define CALIBCONF_READ_NUM  (5)
+#define XY_COORDNATE_DELTA  (50)
+
+/* Macro for adjust coordinate      */
+#define delta_add(x)    \
+    (x) > 256 ? (x) + XY_COORDNATE_DELTA : ((x) > XY_COORDNATE_DELTA ? (x) - XY_COORDNATE_DELTA : 0);
 
 static void print_usage(const char *pName);
 static char *find_event_device(void);
@@ -256,8 +261,8 @@ get_coordinates(int evfd)
     }
     sort_data(bufX, 0, CALIBCONF_READ_NUM - 1);
     sort_data(bufY, 0, CALIBCONF_READ_NUM - 1);
-    mPosX[0] = bufX[CALIBCONF_READ_NUM / 2];
-    mPosY[0] = bufY[CALIBCONF_READ_NUM / 2];
+    mPosX[0] = delta_add(bufX[CALIBCONF_READ_NUM / 2]);
+    mPosY[0] = delta_add(bufY[CALIBCONF_READ_NUM / 2]);
 
     CALIBRATION_PRINT("+------------------------------------------------+\n");
     CALIBRATION_PRINT("| Touch the Top-Right corner of the screen %d times\n",
@@ -270,8 +275,8 @@ get_coordinates(int evfd)
     }
     sort_data(bufX, 0, CALIBCONF_READ_NUM - 1);
     sort_data(bufY, 0, CALIBCONF_READ_NUM - 1);
-    mPosX[1] = bufX[CALIBCONF_READ_NUM / 2];
-    mPosY[1] = bufY[CALIBCONF_READ_NUM / 2];
+    mPosX[1] = delta_add(bufX[CALIBCONF_READ_NUM / 2]);
+    mPosY[1] = delta_add(bufY[CALIBCONF_READ_NUM / 2]);
 
     CALIBRATION_PRINT("+------------------------------------------------+\n");
     CALIBRATION_PRINT("| Touch the Bottom-Left corner of the screen %d times\n",
@@ -284,8 +289,8 @@ get_coordinates(int evfd)
     }
     sort_data(bufX, 0, CALIBCONF_READ_NUM - 1);
     sort_data(bufY, 0, CALIBCONF_READ_NUM - 1);
-    mPosX[2] = bufX[CALIBCONF_READ_NUM / 2];
-    mPosY[2] = bufY[CALIBCONF_READ_NUM / 2];
+    mPosX[2] = delta_add(bufX[CALIBCONF_READ_NUM / 2]);
+    mPosY[2] = delta_add(bufY[CALIBCONF_READ_NUM / 2]);
 
     CALIBRATION_PRINT("+------------------------------------------------+\n");
     CALIBRATION_PRINT("| Touch the Bottom-Right corner of the screen %d times\n",
@@ -298,8 +303,8 @@ get_coordinates(int evfd)
     }
     sort_data(bufX, 0, CALIBCONF_READ_NUM - 1);
     sort_data(bufY, 0, CALIBCONF_READ_NUM - 1);
-    mPosX[3] = bufX[CALIBCONF_READ_NUM / 2];
-    mPosY[3] = bufY[CALIBCONF_READ_NUM / 2];
+    mPosX[3] = delta_add(bufX[CALIBCONF_READ_NUM / 2]);
+    mPosY[3] = delta_add(bufY[CALIBCONF_READ_NUM / 2]);
 }
 
 /*--------------------------------------------------------------------------*/
