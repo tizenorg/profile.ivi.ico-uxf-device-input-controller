@@ -1016,31 +1016,6 @@ raise_surface(struct display *display, char *buf, const int raise)
 }
 
 static void
-animation_surface(struct display *display, char *buf)
-{
-    char    *args[10];
-    int     narg;
-    int     surfaceid;
-
-    narg = pars_command(buf, args, 10);
-    if (narg >= 2)  {
-        surfaceid = search_surface(display, args[0]);
-        if (surfaceid >= 0) {
-            print_log("HOMESCREEN: animation(%s,%08x,%s)", args[0], surfaceid, args[1]);
-            ico_window_mgr_set_animation(display->ico_window_mgr, surfaceid,
-                                         ICO_WINDOW_MGR_ANIMATION_CHANGE_VISIBLE, args[1]);
-        }
-        else    {
-            print_log("HOMESCREEN: Unknown surface(%s) at animation command", args[0]);
-        }
-    }
-    else    {
-        print_log("HOMESCREEN: animation command"
-                  "[animation appid animation] has no argument");
-    }
-}
-
-static void
 visible_layer(struct display *display, char *buf)
 {
     char    *args[10];
@@ -1404,10 +1379,6 @@ int main(int argc, char *argv[])
         else if (strncasecmp(buf, "lower", 5) == 0) {
             /* Raise/Lower surface window   */
             raise_surface(display, &buf[5], 0);
-        }
-        else if (strncasecmp(buf, "animation", 9) == 0) {
-            /* Set animation surface window*/
-            animation_surface(display, &buf[10]);
         }
         else if (strncasecmp(buf, "input_add", 9) == 0) {
             /* Set input switch to application */
