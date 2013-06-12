@@ -1,3 +1,8 @@
+* Wed Jun 12 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130606.173259@3f487a2
+- 0.5.05 release
+- The change of the package test program with the interface change of ico-uxf-weston-plugin.
+- Appoint that more than ico-uxf-weston-plugin-0.5.05 are necessary for spec file.
+
 * Tue Jun 04 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/2.0alpha-wayland/20130603.172535@a56403f
 - 0.5.04 release.
 - Work around - adjust a calibration position of the touch panel.
