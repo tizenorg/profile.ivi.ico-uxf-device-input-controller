@@ -1,13 +1,27 @@
 /*
- * Copyright (c) 2013, TOYOTA MOTOR CORPORATION.
+ * Copyright © 2012 Intel Corporation
+ * Copyright © 2013 TOYOTA MOTOR CORPORATION
  *
- * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that copyright
+ * notice and this permission notice appear in supporting documentation, and
+ * that the name of the copyright holders not be used in advertising or
+ * publicity pertaining to distribution of the software without specific,
+ * written prior permission.  The copyright holders make no representations
+ * about the suitability of this software for any purpose.  It is provided "as
+ * is" without express or implied warranty.
  *
+ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+ * EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+ * OF THIS SOFTWARE.
  */
 /**
- * @brief   Wayland Application for uint test of Weston(Wayland) IVI plugins
+ * @brief   Wayland Application for unit test of Weston(Wayland) IVI plugins
  *
  * @date    Feb-08-2013
  */
@@ -20,7 +34,6 @@
 #include <poll.h>
 #include <wayland-client.h>
 #include <linux/input.h>
-#include "ico_ivi_shell-client-protocol.h"
 #include "ico_window_mgr-client-protocol.h"
 #include "ico_input_mgr-client-protocol.h"
 #include "test-common.h"
@@ -32,7 +45,6 @@ struct display {
     struct wl_registry *registry;
     struct wl_compositor *compositor;
     struct wl_shell *shell;
-    struct ico_ivi_shell *ico_ivi_shell;
     struct ico_window_mgr *ico_window_mgr;
     struct ico_exinput *ico_exinput;
     struct input *input;
@@ -50,6 +62,7 @@ struct input {
     struct wl_seat *seat;
     struct wl_pointer *pointer;
     struct wl_keyboard *keyboard;
+    struct wl_touch *touch;
     float x, y;
     uint32_t button_mask;
     struct surface *pointer_focus;
@@ -87,8 +100,8 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
     input->pointer_focus = wl_surface_get_user_data(surface);
     input->x = wl_fixed_to_double(x);
     input->y = wl_fixed_to_double(y);
-    print_log("CLIENT: got pointer enter (%d,%d), surface %p",
-              (int)input->x, (int)input->y, surface);
+    print_log("CLIENT: got pointer enter (%d,%d)=(%d,%d), surface %p",
+              x, y, (int)input->x, (int)input->y, surface);
 }
 
 static void
@@ -111,7 +124,8 @@ pointer_handle_motion(void *data, struct wl_pointer *pointer,
     input->x = wl_fixed_to_double(x);
     input->y = wl_fixed_to_double(y);
 
-    print_log("CLIENT: got pointer motion (%d,%d)", (int)input->x, (int)input->y);
+    print_log("CLIENT: got pointer motion (%d,%d)=(%d,%d)",
+              x, y, (int)input->x, (int)input->y);
 }
 
 static void
@@ -185,6 +199,39 @@ keyboard_handle_modifiers(void *data, struct wl_keyboard *keyboard,
     print_log("CLIENT: got keyboard modifier");
 }
 
+static void
+touch_handle_down(void *data, struct wl_touch *wl_touch, uint32_t serial, uint32_t time,
+                  struct wl_surface *surface, int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    print_log("CLIENT: got touch down %d (%d,%d)", id, x/256, y/256);
+}
+
+static void
+touch_handle_up(void *data, struct wl_touch *wl_touch, uint32_t serial, uint32_t time,
+                int32_t id)
+{
+    print_log("CLIENT: got touch up %d", id);
+}
+
+static void
+touch_handle_motion(void *data, struct wl_touch *wl_touch, uint32_t time,
+                    int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    print_log("CLIENT: got touch motion %d (%d,%d)", id, x/256, y/256);
+}
+
+static void
+touch_handle_frame(void *data, struct wl_touch *wl_touch)
+{
+    print_log("CLIENT: got touch frame");
+}
+
+static void
+touch_handle_cancel(void *data, struct wl_touch *wl_touch)
+{
+    print_log("CLIENT: got touch cancel");
+}
+
 static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_enter,
     pointer_handle_leave,
@@ -201,6 +248,14 @@ static const struct wl_keyboard_listener keyboard_listener = {
     keyboard_handle_modifiers,
 };
 
+static const struct wl_touch_listener touch_listener = {
+    touch_handle_down,
+    touch_handle_up,
+    touch_handle_motion,
+    touch_handle_frame,
+    touch_handle_cancel
+};
+
 static void
 seat_handle_capabilities(void *data, struct wl_seat *seat,
                          enum wl_seat_capability caps)
@@ -210,8 +265,7 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
     if ((caps & WL_SEAT_CAPABILITY_POINTER) && !input->pointer) {
         input->pointer = wl_seat_get_pointer(seat);
         wl_pointer_set_user_data(input->pointer, input);
-        wl_pointer_add_listener(input->pointer, &pointer_listener,
-                    input);
+        wl_pointer_add_listener(input->pointer, &pointer_listener, input);
     }
     else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && input->pointer) {
         wl_pointer_destroy(input->pointer);
@@ -221,12 +275,21 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
     if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !input->keyboard) {
         input->keyboard = wl_seat_get_keyboard(seat);
         wl_keyboard_set_user_data(input->keyboard, input);
-        wl_keyboard_add_listener(input->keyboard, &keyboard_listener,
-                     input);
+        wl_keyboard_add_listener(input->keyboard, &keyboard_listener, input);
     }
     else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && input->keyboard) {
         wl_keyboard_destroy(input->keyboard);
         input->keyboard = NULL;
+    }
+
+    if ((caps & WL_SEAT_CAPABILITY_TOUCH) && !input->touch) {
+        input->touch = wl_seat_get_touch(seat);
+        wl_touch_set_user_data(input->touch, input);
+        wl_touch_add_listener(input->touch, &touch_listener, input);
+    }
+    else if (!(caps & WL_SEAT_CAPABILITY_TOUCH) && input->touch) {
+        wl_touch_destroy(input->touch);
+        input->touch = NULL;
     }
 }
 
@@ -241,10 +304,11 @@ output_handle_geometry(void *data, struct wl_output *wl_output, int x, int y,
 {
     struct output *output = data;
 
+    print_log("CLIENT: Event[handle_geometry] x/y=%d/%d p.w/h=%d/%d trans=%d",
+              x, y, physical_width, physical_height, transform);
+
     output->x = x;
     output->y = y;
-
-    print_log("CLIENT: Output[geometry] x/y=%d/%d,trans=%d", x, y, transform);
 }
 
 static void
@@ -253,10 +317,12 @@ output_handle_mode(void *data, struct wl_output *wl_output, uint32_t flags,
 {
     struct output *output = data;
 
+    print_log("CLIENT: Event[handle_mode] %08x x/y=%d/%d flags=%08x refresh=%d",
+              (int)wl_output, width, height, flags, refresh);
+
     if (flags & WL_OUTPUT_MODE_CURRENT) {
         output->width = width;
         output->height = height;
-        print_log("CLIENT: Output[mode] w/h=%d/%d", width, height);
     }
 }
 
@@ -334,15 +400,13 @@ handle_global(void *data, struct wl_registry *registry, uint32_t id,
     print_log("CLIENT: handle_global: interface=<%s> id=%d", interface, (int)id);
 
     if (strcmp(interface, "wl_compositor") == 0) {
-        display->compositor =
-            wl_registry_bind(display->registry,
-                     id, &wl_compositor_interface, 1);
+        display->compositor = wl_registry_bind(display->registry, id,
+                                               &wl_compositor_interface, 1);
     }
     else if (strcmp(interface, "wl_seat") == 0) {
         input = calloc(1, sizeof *input);
         input->display = display;
-        input->seat = wl_registry_bind(display->registry, id,
-                           &wl_seat_interface, 1);
+        input->seat = wl_registry_bind(display->registry, id, &wl_seat_interface, 1);
         input->pointer_focus = NULL;
         input->keyboard_focus = NULL;
 
@@ -352,8 +416,7 @@ handle_global(void *data, struct wl_registry *registry, uint32_t id,
     else if (strcmp(interface, "wl_output") == 0) {
         output = malloc(sizeof *output);
         output->display = display;
-        output->output = wl_registry_bind(display->registry,
-                          id, &wl_output_interface, 1);
+        output->output = wl_registry_bind(display->registry, id, &wl_output_interface, 1);
         wl_output_add_listener(output->output,
                        &output_listener, output);
         display->output = output;
@@ -361,27 +424,17 @@ handle_global(void *data, struct wl_registry *registry, uint32_t id,
         print_log("CLIENT: created output global %p", display->output);
     }
     else if (strcmp(interface, "wl_shell") == 0)    {
-        display->shell =
-            wl_registry_bind(display->registry,
-                     id, &wl_shell_interface, 1);
-    }
-    else if (strcmp(interface, "ico_ivi_shell") == 0)   {
-        display->ico_ivi_shell =
-            wl_registry_bind(display->registry,
-                     id, &ico_ivi_shell_interface, 1);
+        display->shell = wl_registry_bind(display->registry, id, &wl_shell_interface, 1);
     }
     else if (strcmp(interface, "ico_window_mgr") == 0)  {
-        display->ico_window_mgr =
-            wl_registry_bind(display->registry,
-                     id, &ico_window_mgr_interface, 1);
+        display->ico_window_mgr = wl_registry_bind(display->registry, id,
+                                                   &ico_window_mgr_interface, 1);
         print_log("CLIENT: created window_mgr global %p", display->ico_window_mgr);
     }
     else if (strcmp(interface, "ico_exinput") == 0)   {
-        display->ico_exinput =
-            wl_registry_bind(display->registry,
-                             id, &ico_exinput_interface, 1);
-        ico_exinput_add_listener(display->ico_exinput,
-                                 &exinput_listener, display);
+        display->ico_exinput = wl_registry_bind(display->registry, id,
+                                                &ico_exinput_interface, 1);
+        ico_exinput_add_listener(display->ico_exinput, &exinput_listener, display);
         print_log("CLIENT: created exinput global %p", display->ico_exinput);
     }
 }
@@ -468,7 +521,7 @@ send_state(struct display* display)
 }
 
 static void
-create_surface(struct display *display)
+create_surface(struct display *display, const char *title)
 {
     struct surface *surface;
 
@@ -486,6 +539,7 @@ create_surface(struct display *display)
             wl_shell_surface_add_listener(surface->shell_surface,
                                           &shell_surface_listener, display);
             wl_shell_surface_set_toplevel(surface->shell_surface);
+            wl_shell_surface_set_title(surface->shell_surface, title);
         }
     }
     wl_display_flush(display->display);
@@ -503,7 +557,8 @@ create_surface(struct display *display)
         surface->egl_surface = opengl_create_window(display->display, surface->surface,
                                                     surface->dpy, surface->conf,
                                                     surface->ctx, display->init_width,
-                                                    display->init_height, display->init_color);
+                                                    display->init_height,
+                                                    display->init_color);
         clear_surface(display);
         print_log("CLIENT: created egl_surface %08x", (int)surface->egl_surface);
     }
@@ -513,12 +568,94 @@ static void
 clear_surface(struct display *display)
 {
     if (! display->surface) {
-        create_surface(display);
+        create_surface(display, "test-client");
     }
     else    {
         opengl_clear_window(display->init_color);
         opengl_swap_buffer(display->display,
                            display->surface->dpy, display->surface->egl_surface);
+    }
+}
+
+static void
+set_region(struct display *display, char *buf)
+{
+    char    *args[10];
+    int     narg;
+    int     x, y, width, height;
+    int     hot_x, hot_y;
+    int     c_x, c_y, c_width, c_height;
+
+    narg = pars_command(buf, args, 10);
+    if (narg >= 5)  {
+        x = strtol(args[1], (char **)0, 0);
+        y = strtol(args[2], (char **)0, 0);
+        width = strtol(args[3], (char **)0, 0);
+        height = strtol(args[4], (char **)0, 0);
+        hot_x = x + (width / 2);
+        hot_y = y + (height / 2);
+        c_x = x + 5;
+        c_y = y + 5;
+        c_width = width - 10;
+        if (c_width <= 0)   c_width = 2;
+        c_height = height - 10;
+        if (c_height <= 0)  c_height = 2;
+        print_log("CLIENT: ico_exinput_set_input_region(%s,%d,%d-%d,%d,"
+                  "hot=%d,%d,cur=%d,%d-%d,%d,attr=0)",
+                  args[0] ? args[0] : "(null)", x, y, width, height,
+                  hot_x, hot_y, c_x, c_y, c_width, c_height);
+        if (strcasecmp(args[0], "NULL") == 0)   {
+            ico_exinput_set_input_region(display->ico_exinput, "", x, y,
+                                         width, height, hot_x, hot_y, c_x, c_y,
+                                         c_width, c_height, 0);
+        }
+        else    {
+            ico_exinput_set_input_region(display->ico_exinput, args[0], x, y,
+                                         width, height, hot_x, hot_y, c_x, c_y,
+                                         c_width, c_height, 0);
+        }
+    }
+    else    {
+        print_log("CLIENT: set_region command[set_region winname@appid x y "
+                  "width height] has no argument");
+    }
+}
+
+static void
+unset_region(struct display *display, char *buf)
+{
+    char    *args[10];
+    int     narg;
+    int     x, y, width, height;
+
+    narg = pars_command(buf, args, 10);
+    if (narg >= 1)  {
+        if (narg >= 5) {
+            x = strtol(args[1], (char **)0, 0);
+            y = strtol(args[2], (char **)0, 0);
+            width = strtol(args[3], (char **)0, 0);
+            height = strtol(args[4], (char **)0, 0);
+        }
+        else    {
+            x = 0;
+            y = 0;
+            width = 0;
+            height = 0;
+        }
+        print_log("CLIENT: ico_exinput_unset_input_region(%s,08x,%d,%d-%d,%d)",
+                  args[0] ? args[0] : "(null)", x, y, width, height);
+        if (strcasecmp(args[0], "NULL") == 0)   {
+            ico_exinput_unset_input_region(display->ico_exinput, "", x, y,
+                                           width, height);
+        }
+        else    {
+            ico_exinput_unset_input_region(display->ico_exinput, args[0],
+                                           x, y, width, height);
+        }
+    }
+    else    {
+        print_log("CLIENT: unset_region command[unset_region winname@appid x y "
+                  "width height] has no argument");
     }
 }
 
@@ -577,15 +714,16 @@ int main(int argc, char *argv[])
     wl_registry_add_listener(display->registry,
                  &registry_listener, display);
     wl_display_dispatch(display->display);
+    sleep_with_wayland(display->display, 1000);
 
     fd = 0;
 
     while (1) {
         sleep_with_wayland(display->display, 20);
         if (display->prompt)    {
-            printf("CLIENT: "); fflush(stdout);
+            printf("CLIENT> "); fflush(stdout);
         }
-        ret = getdata(display->ico_window_mgr, "CLIENT: ", fd, buf, sizeof(buf));
+        ret = getdata(display->ico_window_mgr, "CLIENT> ", fd, buf, sizeof(buf));
         if (ret < 0) {
             fprintf(stderr, "CLIENT: read error: fd %d, %m\n",
                 fd);
@@ -601,11 +739,19 @@ int main(int argc, char *argv[])
             break;
         }
         else if (strncasecmp(buf, "create-surface", ret) == 0) {
-            create_surface(display);
+            create_surface(display, "test-client");
         }
         else if (strncasecmp(buf, "clear-surface", 13) == 0) {
             display->init_color = strtoul(&buf[14], (char **)0, 0);
             clear_surface(display);
+        }
+        else if (strncasecmp(buf, "set_region", 10) == 0) {
+            /* set input region                 */
+            set_region(display, &buf[10]);
+        }
+        else if (strncasecmp(buf, "unset_region", 12) == 0) {
+            /* unset input region               */
+            unset_region(display, &buf[12]);
         }
         else if (strncasecmp(buf, "send-state", ret) == 0) {
             send_state(display);
@@ -622,7 +768,7 @@ int main(int argc, char *argv[])
         }
         else {
             print_log("CLIENT: unknown command[%s]", buf);
-            return(-1);
+            return -1;
         }
     }
     if (postsec > 0)    {
