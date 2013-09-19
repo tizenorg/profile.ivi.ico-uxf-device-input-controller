@@ -1,6 +1,6 @@
 AC_PREREQ([2.68])
 AC_INIT([ico-uxf-device-input-controller],
-        [0.4.91],
+        [0.9.01],
         [https://BUG-REPORT-ADDRESS])
 
 AC_CONFIG_HEADERS([config.h])
@@ -55,7 +55,6 @@ AC_SUBST(GCC_CXXFLAGS)
 WAYLAND_SCANNER_RULES(['$(top_srcdir)/protocol'])
 
 AC_CONFIG_FILES([Makefile
-		 joystick_gtforce/Makefile
-		 touch_egalax/Makefile
+		 gtforce/Makefile
 		 tests/Makefile])
 AC_OUTPUT

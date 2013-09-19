@@ -8,9 +8,9 @@
  */
 /**
  * @brief   Device Input Controller(GtForce joystick)
- * @brief   joystick input event to Input Manager
+ * @brief   GtForce input event to Input Manager
  *
- * @date    Feb-08-2013
+ * @date    Sep-08-2013
  */
 
 #include    <stdio.h>
@@ -23,30 +23,34 @@
 #include    <linux/joystick.h>
 #include    <glib.h>
 
-#include    "ico_ictl-local.h"
+#include    "ico_dic-gtforce.h"
 
 /* type definition                                                                  */
-typedef struct  _Ico_ICtl_JS    {
+typedef struct  _Ico_Dic_JS    {
     int                     fd;                 /* device file fd                   */
     char                    device[32];         /* device name                      */
-    char                    ictl[32];           /* input controller name            */
+    char                    dic_name[32];       /* input controller name            */
     int                     type;               /* device type                      */
     int                     hostid;             /* host Id(currently unused)        */
-}   Ico_ICtl_JS;
+}   Ico_Dic_JS;
 
-typedef struct  _Ico_Ictl_Code  {
+typedef struct  _Ico_Dic_Code  {
     unsigned short          code;               /* code value                       */
     char                    name[20];           /* code name                        */
-}   Ico_Ictl_Code;
+    char                    appid[ICO_DIC_MAX_APPID_LEN];
+                                                /* application id or script path    */
+    short                   keycode;            /* keycode or -1 for script         */
+}   Ico_Dic_Code;
 
-typedef struct  _Ico_ICtl_JS_Input  {
+typedef struct  _Ico_Dic_JS_Input  {
     char                    name[20];           /* input switch name                */
     int                     input;              /* input number                     */
     int                     type;               /* input event type                 */
     int                     number;             /* input event number               */
-    Ico_Ictl_Code           code[20];           /* key code                         */
+    Ico_Dic_Code            code[ICO_DIC_MAX_CODES];
+                                                /* key code                         */
     int                     last;               /* last input code                  */
-}   Ico_ICtl_JS_Input;
+}   Ico_Dic_JS_Input;
 
 /* prototype of static function                                                     */
 static void PrintUsage(const char *pName);
@@ -59,31 +63,31 @@ struct timeval      lastEvent = { 0, 0 };       /* last input event time        
 int                 gRunning = 1;               /* run state(1:run, 0:finish)       */
 
 /* Input Contorller Table           */
-Ico_ICtl_Mng        gIco_ICtrl_Mng = { 0 };
-Ico_ICtl_JS         gIco_ICtrl_JS = { 0 };
-int                 nIco_ICtrl_JS_Input = 0;
-Ico_ICtl_JS_Input   *gIco_ICtrl_JS_Input = NULL;
+Ico_Dic_Mng         gIco_Dic_Mng = { 0 };
+Ico_Dic_JS          gIco_Dic_JS = { 0 };
+int                 nIco_Dic_JS_Input = 0;
+Ico_Dic_JS_Input    *gIco_Dic_JS_Input = NULL;
 
 /* static functions                 */
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   ico_ictl_find_input_by_name: find Input Table by input switch name
+ * @brief   ico_dic_find_input_by_name: find Input Table by input switch name
  *
  * @param[in]   name        input switch name
- * @return  result
- * @retval  !=NULL      success(Input Table address)
- * @retval  ==NULL      failed
+ * @return      result
+ * @retval      !=NULL      success(Input Table address)
+ * @retval      ==NULL      failed
  */
 /*--------------------------------------------------------------------------*/
-static Ico_ICtl_JS_Input *
-ico_ictl_find_input_by_name(const char *name)
+static Ico_Dic_JS_Input *
+ico_dic_find_input_by_name(const char *name)
 {
-    Ico_ICtl_JS_Input   *iMng = NULL;
+    Ico_Dic_JS_Input   *iMng = NULL;
     int                  ii;
 
-    for (ii = 0; ii < nIco_ICtrl_JS_Input; ii++)    {
-        if (strncasecmp(name, gIco_ICtrl_JS_Input[ii].name, 16) == 0) {
-            iMng = &gIco_ICtrl_JS_Input[ii];
+    for (ii = 0; ii < nIco_Dic_JS_Input; ii++)    {
+        if (strncasecmp(name, gIco_Dic_JS_Input[ii].name, 16) == 0) {
+            iMng = &gIco_Dic_JS_Input[ii];
             break;
         }
     }
@@ -92,25 +96,25 @@ ico_ictl_find_input_by_name(const char *name)
 
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   ico_ictl_find_input_by_param: find Input Table by input switch type and number
+ * @brief   ico_dic_find_input_by_param: find Input Table by input switch type and number
  *
  * @param[in]   type        input event type (of Linux Input subsystem)
  * @param[in]   number      input event number (of Linux Input subsystem)
- * @return  result
- * @retval  !=NULL      success(Input Table address)
- * @retval  ==NULL      failed
+ * @return      result
+ * @retval      !=NULL      success(Input Table address)
+ * @retval      ==NULL      failed
  */
 /*--------------------------------------------------------------------------*/
-static Ico_ICtl_JS_Input *
-ico_ictl_find_input_by_param(int type, int number)
+static Ico_Dic_JS_Input *
+ico_dic_find_input_by_param(int type, int number)
 {
-    Ico_ICtl_JS_Input   *iMng = NULL;
+    Ico_Dic_JS_Input   *iMng = NULL;
     int                  ii;
 
-    for (ii = 0; ii < nIco_ICtrl_JS_Input; ii++)    {
-        if ((gIco_ICtrl_JS_Input[ii].type == type)
-            && (gIco_ICtrl_JS_Input[ii].number == number))  {
-            iMng = &gIco_ICtrl_JS_Input[ii];
+    for (ii = 0; ii < nIco_Dic_JS_Input; ii++)    {
+        if ((gIco_Dic_JS_Input[ii].type == type)
+            && (gIco_Dic_JS_Input[ii].number == number))  {
+            iMng = &gIco_Dic_JS_Input[ii];
             break;
         }
     }
@@ -122,9 +126,9 @@ ico_ictl_find_input_by_param(int type, int number)
  * @brief   conf_getUint: convert integer string to value
  *
  * @param[in]   str         integer string
- * @return  result
- * @retval  >=0         success(converted vaule)
- * @retval  -1          failed
+ * @return      result
+ * @retval      >=0         success(converted vaule)
+ * @retval      -1          failed
  */
 /*--------------------------------------------------------------------------*/
 static int
@@ -149,9 +153,9 @@ conf_getUint(const char *str)
  *
  * @param[in]   keyfile     configuration file
  * @param[in]   group       configuration key group name
- * @return  result
- * @retval  !=NULL          success(configuration list)
- * @retval  ==NULL          failed
+ * @return      result
+ * @retval      !=NULL          success(configuration list)
+ * @retval      ==NULL          failed
  */
 /*--------------------------------------------------------------------------*/
 static GList *
@@ -180,7 +184,7 @@ conf_countNumericalKey(GKeyFile *keyfile, const char *group)
  *
  * @param[in]   str1        string 1
  * @param[in]   str2        string 2
- * @return  connected string
+ * @return      connected string
  */
 /*--------------------------------------------------------------------------*/
 static char *
@@ -193,28 +197,28 @@ conf_appendStr(const char *str1, const char *str2)
 
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   ico_ictl_read_conf: read configuration file
+ * @brief   ico_dic_read_conf: read configuration file
  *
- * @param[in]   file        configuration file path name
- * @return  result
- * @retval  ICO_ICTL_OK     sccess
- * @retval  ICO_ICTL_ERR    failed
+ * @param[in]   file            configuration file path name
+ * @return      result
+ * @retval      ICO_DIC_OK      sccess
+ * @retval      ICO_DIC_ERR     failed
  */
 /*--------------------------------------------------------------------------*/
 static int
-ico_ictl_read_conf(const char *file)
+ico_dic_read_conf(const char *file)
 {
-    DEBUG_PRINT("ico_ictl_read_conf: Enter(file=%s)", file);
+    ICO_TRA("ico_dic_read_conf: Enter(file=%s)", file);
 
     GKeyFile            *keyfile;
     GKeyFileFlags       flags;
     GString             *filepath;
     GList               *idlist;
     GError              *error = NULL;
-    Ico_ICtl_JS_Input   *iMng;
+    Ico_Dic_JS_Input   *iMng;
     char                *name;
     gsize               length;
-    int                 ii, jj;
+    int                 ii, jj, kk, ll;
 
     keyfile = g_key_file_new();
     flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
@@ -222,24 +226,24 @@ ico_ictl_read_conf(const char *file)
     filepath = g_string_new(file);
 
     if (! g_key_file_load_from_file(keyfile, filepath->str, flags, &error)) {
-        ERROR_PRINT("ico_ictl_read_conf: Leave(can not open conf file)");
+        ICO_ERR("ico_dic_read_conf: Leave(can not open conf file)");
         g_string_free(filepath, TRUE);
-        return ICO_ICTL_ERR;
+        return ICO_DIC_ERR;
     }
     g_string_free(filepath, TRUE);
 
     /* count number of key in [device] section   */
-    memset((char *)&gIco_ICtrl_JS, 0, sizeof(gIco_ICtrl_JS));
+    memset((char *)&gIco_Dic_JS, 0, sizeof(gIco_Dic_JS));
     name = g_key_file_get_string(keyfile, "device", "name", &error);
     if (name)   {
-        strncpy(gIco_ICtrl_JS.device, name, sizeof(gIco_ICtrl_JS.device)-1);
+        strncpy(gIco_Dic_JS.device, name, sizeof(gIco_Dic_JS.device)-1);
     }
-    name = g_key_file_get_string(keyfile, "device", "ictl", &error);
+    name = g_key_file_get_string(keyfile, "device", "dic", &error);
     if (name)   {
-        strncpy(gIco_ICtrl_JS.ictl, name, sizeof(gIco_ICtrl_JS.ictl)-1);
+        strncpy(gIco_Dic_JS.dic_name, name, sizeof(gIco_Dic_JS.dic_name)-1);
     }
-    gIco_ICtrl_JS.type = g_key_file_get_integer(keyfile, "device", "type", &error);
-    gIco_ICtrl_JS.hostid = g_key_file_get_integer(keyfile, "device", "ecu", &error);
+    gIco_Dic_JS.type = g_key_file_get_integer(keyfile, "device", "type", &error);
+    gIco_Dic_JS.hostid = g_key_file_get_integer(keyfile, "device", "ecu", &error);
 
     /* count number of key in [input] section   */
     idlist = conf_countNumericalKey(keyfile, "input");
@@ -247,31 +251,34 @@ ico_ictl_read_conf(const char *file)
     if (length <= 0)    {
         length = 1;
     }
-    nIco_ICtrl_JS_Input = 0;
-    gIco_ICtrl_JS_Input = (Ico_ICtl_JS_Input *)malloc(sizeof(Ico_ICtl_JS_Input) * length);
-    if (! gIco_ICtrl_JS_Input)  {
-        ERROR_PRINT("joystick_gtforce: No Memory");
+    nIco_Dic_JS_Input = 0;
+    gIco_Dic_JS_Input = (Ico_Dic_JS_Input *)malloc(sizeof(Ico_Dic_JS_Input) * length);
+    if (! gIco_Dic_JS_Input)  {
+        ICO_ERR("joystick_gtforce: No Memory");
         exit(1);
     }
-    memset((char *)gIco_ICtrl_JS_Input, 0, sizeof(Ico_ICtl_JS_Input) * length);
+    memset((char *)gIco_Dic_JS_Input, 0, sizeof(Ico_Dic_JS_Input) * length);
 
     for (ii = 0; ii < (int)length; ii++) {
         const char  *g = "input";
         char        *key = (char *)g_list_nth_data(idlist, ii);
         gsize       listsize;
+        gsize       listsize2;
         gint        *attr;
         gchar       **code;
+        char        *p;
+        int         codeval;
 
         name = g_key_file_get_string(keyfile, g, key, &error);
         if (name == NULL)   continue;
 
-        iMng = ico_ictl_find_input_by_name(name);
+        iMng = ico_dic_find_input_by_name(name);
         if (iMng != NULL)   {
             /* multiple define  */
-            ERROR_PRINT("ico_ictl_read_conf: switch name(%s) re-define", name);
+            ICO_ERR("ico_dic_read_conf: switch name(%s) re-define", name);
             continue;
         }
-        iMng = &gIco_ICtrl_JS_Input[nIco_ICtrl_JS_Input];
+        iMng = &gIco_Dic_JS_Input[nIco_Dic_JS_Input];
 
         iMng->input = conf_getUint(key);
         strncpy(iMng->name, name, sizeof(iMng->name)-1);
@@ -279,20 +286,20 @@ ico_ictl_read_conf(const char *file)
         /* event            */
         attr = g_key_file_get_integer_list(keyfile, g, conf_appendStr(key, ".event"),
                                            &listsize, &error);
-        if (listsize < 2)   continue;
+        if ((int)listsize < 2)   continue;
         iMng->type = attr[0];
         iMng->number = attr[1];
 
         /* code             */
         code = g_key_file_get_string_list(keyfile, g, conf_appendStr(key, ".code"),
                                           &listsize, &error);
-        if ((code == NULL) || (listsize <= 0))  {
+        if ((code == NULL) || ((int)listsize <= 0))  {
             strcpy(iMng->code[0].name, iMng->name);
         }
         else    {
-            if ((int)listsize > 20) listsize = 20;
+            if ((int)listsize > ICO_DIC_MAX_CODES) listsize = ICO_DIC_MAX_CODES;
             for (jj = 0; jj < (int)listsize; jj++) {
-                char    *p = (char *)code[jj];
+                p = (char *)code[jj];
                 while ((*p != 0) && (*p != ':'))    {
                     iMng->code[jj].code = iMng->code[jj].code * 10 + *p - '0';
                     p ++;
@@ -308,50 +315,133 @@ ico_ictl_read_conf(const char *file)
         }
         if (code)   g_strfreev(code);
 
-        nIco_ICtrl_JS_Input ++;
+        /* fixed            */
+        code = g_key_file_get_string_list(keyfile, g, conf_appendStr(key, ".fixed"),
+                                          &listsize2, &error);
+        error = NULL;
+        if ((code != NULL) && ((int)listsize2 > 0))  {
+            for (jj = 0; jj < (int)listsize2; jj++) {
+                p = (char *)code[jj];
+                codeval = -1;
+                while ((*p >= '0') && (*p <= '9'))  {
+                    if (codeval < 0)    codeval = 0;
+                    codeval = codeval * 10 + *p - '0';
+                    p ++;
+                }
+                if ((codeval >= 0) && (*p == ':'))  {
+                    p++;
+                    for (kk = 0; kk < (int)listsize; kk++)   {
+                        if (iMng->code[kk].code == codeval) break;
+                    }
+                    memset(iMng->code[kk].appid, 0, ICO_DIC_MAX_APPID_LEN);
+                    if (strncasecmp(p, "shell=", 6) == 0)   {
+                        iMng->code[kk].keycode = -1;
+                        strncpy(iMng->code[kk].appid, p + 6, ICO_DIC_MAX_APPID_LEN-1);
+                    }
+                    else    {
+                        if (strncasecmp(p, "appid=", 6) == 0)   {
+                            p += 6;
+                        }
+                        for (ll = 0; ll < (ICO_DIC_MAX_APPID_LEN-1); ll++)  {
+                            if ((*p == 0) || (*p == ':'))   break;
+                            iMng->code[kk].appid[ll] = *p;
+                            p++;
+                        }
+                        if (*p) {
+                            p ++;
+                            if (strncasecmp(p, "key=", 4) == 0) p += 4;
+                            iMng->code[kk].keycode = strtol(p, (char **)0, 0);
+                        }
+                    }
+                }
+                else    {
+                    for (kk = 0; kk < (int)listsize; kk++)   {
+                        if (kk == 0)    {
+                            memset(iMng->code[0].appid, 0, ICO_DIC_MAX_APPID_LEN);
+                            if (strncasecmp(p, "shell=", 6) == 0)   {
+                                iMng->code[0].keycode = -1;
+                                strncpy(iMng->code[0].appid, p + 6, ICO_DIC_MAX_APPID_LEN-1);
+                            }
+                            else    {
+                                if (strncasecmp(p, "appid=", 6) == 0)   {
+                                    p += 6;
+                                }
+                                for (ll = 0; ll < (ICO_DIC_MAX_APPID_LEN-1); ll++)  {
+                                    if ((*p == 0) || (*p == ':'))   break;
+                                    iMng->code[0].appid[ll] = *p;
+                                    p++;
+                                }
+                                if (*p) {
+                                    p ++;
+                                    if (strncasecmp(p, "key=", 4) == 0) p += 4;
+                                    iMng->code[0].keycode = strtol(p, (char **)0, 0);
+                                }
+                            }
+                        }
+                        else    {
+                            memcpy(iMng->code[kk].appid,
+                                   iMng->code[0].appid, ICO_DIC_MAX_APPID_LEN);
+                            iMng->code[kk].keycode = iMng->code[0].keycode;
+                        }
+                    }
+                }
+            }
+        }
+        if (code)   g_strfreev(code);
 
-        DEBUG_PRINT("%s input:%d(type=%d,number=%d,code=%d[%s],%d[%s])",
+        nIco_Dic_JS_Input ++;
+
+        if (iMng->code[1].code == 0)    {
+            ICO_DBG("%s input:%d type=%d,number=%d,code=%d[%s,%s,%d]",
                     iMng->name, iMng->input, iMng->type, iMng->number,
                     iMng->code[0].code, iMng->code[0].name,
-                    iMng->code[1].code, iMng->code[1].name);
+                    iMng->code[0].appid, iMng->code[0].keycode);
+        }
+        else    {
+            ICO_DBG("%s input:%d type=%d,number=%d,code=%d[%s,%s,%d],code=%d[%s,%s,%d]",
+                    iMng->name, iMng->input, iMng->type, iMng->number,
+                    iMng->code[0].code, iMng->code[0].name,
+                    iMng->code[0].appid, iMng->code[0].keycode,
+                    iMng->code[1].code, iMng->code[1].name,
+                    iMng->code[1].appid, iMng->code[1].keycode);
+        }
     }
-    DEBUG_PRINT("ico_ictl_read_conf: Leave");
+    ICO_TRA("ico_dic_read_conf: Leave");
 
-    return ICO_ICTL_OK;
+    return ICO_DIC_OK;
 }
 
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   ico_ictl_js_open: open input jyostick input device
+ * @brief   ico_dic_js_open: open input jyostick input device
  *
- * @param[in]   ictlDevName     device name
- * @return  result
- * @retval  >= 0            sccess(device file descriptor)
- * @retval  ICO_ICTL_ERR    failed
+ * @param[in]       dicDevName      device name
+ * @param[in/out]   confpath        configuration file path
+ * @return      result
+ * @retval      >= 0            sccess(device file descriptor)
+ * @retval      ICO_DIC_ERR     failed
  */
 /*--------------------------------------------------------------------------*/
 static int
-ico_ictl_js_open(const char *ictlDevName)
+ico_dic_js_open(const char *dicDevName, char **confpath)
 {
-    DEBUG_PRINT("ico_ictl_js_open: Enter(device=%s)", ictlDevName)
-
     int                 fd = -1;
+    int                 conf_fd;
+    static char         fixconfpath[128];
     char                devFile[64];
     char                devName[64];
     int                 ii, jj, kk;
 
-    if (ictlDevName == NULL) {
-        ERROR_PRINT("ico_ictl_js_open: Leave(failed devname NULL)");
-        return ICO_ICTL_ERR;
-    }
+    ICO_TRA("ico_dic_js_open: Enter(device=%s, conf=%s)", dicDevName,
+            *confpath ? *confpath : "(null)");
 
-    char *pdev = getenv(ICO_ICTL_INPUT_DEV);
+    char *pdev = getenv(ICO_DIC_INPUT_DEV);
     if ((pdev != NULL) && (*pdev != 0)) {
-        DEBUG_PRINT("ico_ictl_js_open: Pseudo input device(%s)", pdev);
+        ICO_DBG("ico_dic_js_open: Pseudo input device(%s)", pdev);
         mPseudo = 1;
     }
     else    {
-        pdev = (char *)ictlDevName;
+        pdev = (char *)dicDevName;
     }
     for (ii = 0; ii < 16; ii++) {
         if (mPseudo)    {
@@ -373,44 +463,70 @@ ico_ictl_js_open(const char *ictlDevName)
         kk = 0;
         for (jj = 0; devName[jj]; jj++) {
             if (devName[jj] != ' ') {
-                devName[kk++] = devName[jj];
+                if ((devName[jj] >= 'A') && (devName[jj] <= 'Z'))   {
+                    devName[kk++] = devName[jj] - 'A' + 'a';
+                }
+                else    {
+                    devName[kk++] = devName[jj];
+                }
             }
         }
         devName[kk] = 0;
-        DEBUG_PRINT("ico_ictl_js_open: %d.%s", ii+1, devName);
+        ICO_DBG("ico_dic_js_open: %d.%s", ii+1, devName);
 
-        if (strncasecmp(devName, pdev, sizeof(devName)) == 0)   break;
+        if (pdev)   {
+            /* fixed (or debug) device      */
+            if (strcasecmp(pdev, devName) == 0) {
+                if (*confpath == NULL)  {
+                    snprintf(fixconfpath, sizeof(fixconfpath), ICO_DIC_CONF_FILE, devName);
+                }
+                break;
+            }
+        }
+        else    {
+            /* search configuration file    */
+            if (*confpath == NULL)  {
+                snprintf(fixconfpath, sizeof(fixconfpath), ICO_DIC_CONF_FILE, devName);
+                conf_fd = open(fixconfpath, O_RDONLY);
+                if (conf_fd < 0)    continue;
+                close(conf_fd);
+            }
+            break;
+        }
         /* not match, close */
         close(fd);
         fd = -1;
     }
 
     if (fd < 0) {
-        ERROR_PRINT("ico_ictl_js_open: Leave(not find device file)");
-        return ICO_ICTL_ERR;
+        ICO_ERR("ico_dic_js_open: Leave(not find device file)");
+        return ICO_DIC_ERR;
     }
-    DEBUG_PRINT("ico_ictl_js_open: Leave(found %s[%s] as %s)", pdev, devFile, ictlDevName);
+    ICO_TRA("ico_dic_js_open: Leave(found %s)", fixconfpath);
+
+    if (*confpath == NULL)  {
+        *confpath = &fixconfpath[0];
+    }
     return fd;
 }
 
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   ico_ictl_js_read: read input jyostick input device
+ * @brief   ico_dic_js_read: read jyostick input device
  *
  * @param[in]   fd          file descriptor
  * @return      nothing
  */
 /*--------------------------------------------------------------------------*/
 static void
-ico_ictl_js_read(int fd)
+ico_dic_js_read(int fd)
 {
-    DEBUG_PRINT("ico_ictl_js_read: Enter(fd=%d)", fd)
-
     struct js_event     events[8];
     struct input_event  pevents[8];
     int                 rSize;
     int                 ii, jj;
     int                 number, value, type, code, state;
+    int                 icode;
 
     if (mPseudo)    {
         /* Pseudo event input for Debug */
@@ -428,8 +544,8 @@ ico_ictl_js_read(int fd)
                 else if ((events[ii].type == 1) && (events[ii].number == 9))    {
                     events[ii].number = 0;
                 }
-                DEBUG_PRINT("ico_ictl_js_read: pseude event.%d %d.%d.%d",
-                            ii, events[ii].type, events[ii].number, events[ii].value);
+                ICO_DBG("ico_dic_js_read: pseude event.%d %d.%d.%d",
+                        ii, events[ii].type, events[ii].number, events[ii].value);
             }
             rSize = ii * sizeof(struct js_event);
         }
@@ -442,22 +558,25 @@ ico_ictl_js_read(int fd)
         if ((ii == EINTR) || (ii == EAGAIN))    {
             return;
         }
-        DEBUG_PRINT("ico_ictl_js_read: Leave(read error[%d])", ii)
+        ICO_ERR("ico_dic_js_read: read error[%d]", ii)
         exit(9);
     }
     for (ii = 0; ii < (rSize / (int)sizeof(struct js_event)); ii++) {
-        Ico_ICtl_JS_Input   *iMng = NULL;
+        Ico_Dic_JS_Input   *iMng = NULL;
 
         type = events[ii].type;
         number = events[ii].number;
         value = events[ii].value;
-        DEBUG_PRINT("ico_ictl_js_read: Read(type=%d, number=%d, value=%d",
-                    type, number, value);
-
-        iMng = ico_ictl_find_input_by_param(type, number);
+        iMng = ico_dic_find_input_by_param(type, number);
         if (iMng == NULL) {
+            if (mDebug >= 2)    {
+                ICO_DBG("ico_dic_js_read: Not Assigned(type=%d, number=%d, value=%d)",
+                        type, number, value);
+            }
             continue;
         }
+        ICO_DBG("ico_dic_js_read: Read(type=%d, number=%d, value=%d)",
+                type, number, value);
 
         if (mEventLog)  {
             struct timeval  curtime;
@@ -488,14 +607,15 @@ ico_ictl_js_read(int fd)
                 lastEvent.tv_usec = curtime.tv_usec;
             }
             for (jj = 0;
-                 jj < (int)(sizeof(gIco_ICtrl_JS_Input)/sizeof(Ico_ICtl_JS_Input)); jj++) {
-                if ((type == gIco_ICtrl_JS_Input[jj].type) &&
-                    (number == gIco_ICtrl_JS_Input[jj].number))  {
+                 jj < (int)(sizeof(gIco_Dic_JS_Input)/sizeof(Ico_Dic_JS_Input)); jj++) {
+                if ((type == gIco_Dic_JS_Input[jj].type) &&
+                    (number == gIco_Dic_JS_Input[jj].number))  {
                     break;
                 }
             }
         }
 
+        icode = 0;
         if (iMng->code[1].code != 0)    {
             if (value < 0) {
                 code = iMng->code[0].code;
@@ -503,6 +623,7 @@ ico_ictl_js_read(int fd)
                 iMng->last = code;
             }
             else if (value > 0) {
+                icode = 1;
                 code = iMng->code[1].code;
                 state = WL_KEYBOARD_KEY_STATE_PRESSED;
                 iMng->last = code;
@@ -512,6 +633,9 @@ ico_ictl_js_read(int fd)
                     continue;
                 }
                 code = iMng->last;
+                if (code == iMng->code[1].code) {
+                    icode = 1;
+                }
                 state = WL_KEYBOARD_KEY_STATE_RELEASED;
                 iMng->last = -1;
             }
@@ -529,8 +653,38 @@ ico_ictl_js_read(int fd)
                 continue;
             }
         }
-        ico_input_mgr_device_input_event(gIco_ICtrl_Mng.Wayland_InputMgr, events[ii].time,
-                                         gIco_ICtrl_JS.device, iMng->input, code, state);
+        if (iMng->code[icode].appid[0]) {
+            /* fixed event                      */
+            if (iMng->code[icode].keycode < 0)  {
+                /* start program if pressed */
+                if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+                    ICO_DBG("ico_dic_js_read: start script(%s)", iMng->code[icode].appid);
+                    if (system(iMng->code[icode].appid) == -1)  {
+                        ICO_WRN("ico_dic_js_read: script(%s) Error",
+                                iMng->code[icode].appid);
+                    }
+                }
+            }
+            else    {
+                /* send keyboard event to application               */
+                if (state == WL_KEYBOARD_KEY_STATE_PRESSED) state = 1;
+                else                                        state = 0;
+
+                ICO_DBG("ico_dic_js_read: send event to %s(%d.%d)",
+                        iMng->code[icode].appid, iMng->code[icode].keycode, state);
+                ico_input_mgr_control_send_input_event(gIco_Dic_Mng.Wayland_InputCtl,
+                                                       iMng->code[icode].appid, 0,
+                                                       ICO_INPUT_MGR_DEVICE_TYPE_KEYBOARD,
+                                                       0, iMng->code[icode].keycode, state);
+            }
+        }
+        else    {
+            /* general switch event, send to multi input manager    */
+            ICO_DBG("ico_dic_js_read: send general input event(%s.%d.%d.%d)",
+                    gIco_Dic_JS.device, iMng->input, code, state);
+            ico_input_mgr_device_input_event(gIco_Dic_Mng.Wayland_InputMgr, events[ii].time,
+                                             gIco_Dic_JS.device, iMng->input, code, state);
+        }
     }
 }
 
@@ -550,19 +704,20 @@ signal_int(int signum)
 
 /*--------------------------------------------------------------------------*/
 /**
- * @brief   Device Input Controllers: For Joy Stick
+ * @brief   Device Input Controllers: For GtForce
  *          main routine
  *
- * @param   main() finction's standard parameter (argc,argv)
- * @return  result
- * @retval  0       success
- * @retval  1       failed
+ * @param       main() finction's standard parameter (argc,argv)
+ * @return      result
+ * @retval      0       success
+ * @retval      1       failed
  */
 /*--------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     struct epoll_event  ev_ret[16];
-    char                *ictlDevName = "DrivingForceGT";
+    char                *dicDevName = NULL;
+    char                *confpath;
     int                 JSfd;
     int                 ii, jj;
     int                 ret;
@@ -574,16 +729,20 @@ int main(int argc, char *argv[])
             PrintUsage(argv[0]);
             exit( 0 );
         }
-        else if (strcasecmp( argv[ii], "-d") == 0) {
+        else if (strcmp( argv[ii], "-d") == 0) {
             /* debug    */
             mDebug = 1;
+        }
+        else if (strcmp( argv[ii], "-D") == 0) {
+            /* debug    */
+            mDebug = 2;
         }
         else if (strcasecmp( argv[ii], "-l") == 0) {
             /* event input log  */
             mEventLog = 1;
         }
         else {
-            ictlDevName = argv[ii];
+            dicDevName = argv[ii];
         }
     }
 
@@ -595,63 +754,75 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* open joystick    */
-    JSfd = ico_ictl_js_open(ictlDevName);
-    if (JSfd < 0) {
-        ERROR_PRINT("main: Leave(Error device open)");
-        exit(1);
-    }
-    gIco_ICtrl_JS.fd = JSfd;
+    /* set log name     */
+    ico_log_open("ico_dic-gtforce");
 
     /* read conf file   */
-    char *confpath = getenv(ICO_ICTL_CONF_ENV);
-    if (!confpath)  {
-        confpath = ICO_ICTL_CONF_FILE;
+    confpath = getenv(ICO_DIC_CONF_ENV);
+
+    /* open joystick    */
+    JSfd = ico_dic_js_open(dicDevName, &confpath);
+    if (JSfd < 0) {
+        ICO_ERR("main: Leave(Error device open)");
+        exit(1);
     }
-    ico_ictl_read_conf(confpath);
+    gIco_Dic_JS.fd = JSfd;
+
+    /* read conf file   */
+    if (ico_dic_read_conf(confpath) == ICO_DIC_ERR) {
+        ICO_ERR("main: Leave(Error can not read configfile(%s))", confpath);
+        exit(1);
+    }
 
     /* initialize wayland   */
-    ico_ictl_wayland_init(NULL, NULL);
-    ico_ictl_add_fd(JSfd);
+    if (ico_dic_wayland_init(NULL, NULL) == ICO_DIC_ERR)    {
+        ICO_ERR("main: Leave(Error can not connect to wayland)");
+        exit(1);
+    }
+    ico_dic_add_fd(JSfd);
 
     /* send configuration informations to Multi Input Manager   */
-    for (ii = 0; ii < nIco_ICtrl_JS_Input; ii++)    {
+    for (ii = 0; ii < nIco_Dic_JS_Input; ii++)    {
+        if (gIco_Dic_JS_Input[ii].code[0].appid[0] != 0)    continue;
         ico_input_mgr_device_configure_input(
-                gIco_ICtrl_Mng.Wayland_InputMgr, gIco_ICtrl_JS.device, gIco_ICtrl_JS.type,
-                gIco_ICtrl_JS_Input[ii].name, gIco_ICtrl_JS_Input[ii].input,
-                gIco_ICtrl_JS_Input[ii].code[0].name, gIco_ICtrl_JS_Input[ii].code[0].code);
-        for (jj = 1; jj < 20; jj++)     {
-            if (gIco_ICtrl_JS_Input[ii].code[jj].code == 0) break;
+                gIco_Dic_Mng.Wayland_InputMgr, gIco_Dic_JS.device, gIco_Dic_JS.type,
+                gIco_Dic_JS_Input[ii].name, gIco_Dic_JS_Input[ii].input,
+                gIco_Dic_JS_Input[ii].code[0].name, gIco_Dic_JS_Input[ii].code[0].code);
+        for (jj = 1; jj < ICO_DIC_MAX_CODES; jj++)     {
+            if (gIco_Dic_JS_Input[ii].code[jj].code == 0) break;
             ico_input_mgr_device_configure_code(
-                    gIco_ICtrl_Mng.Wayland_InputMgr, gIco_ICtrl_JS.device,
-                    gIco_ICtrl_JS_Input[ii].input, gIco_ICtrl_JS_Input[ii].code[jj].name,
-                    gIco_ICtrl_JS_Input[ii].code[jj].code);
+                    gIco_Dic_Mng.Wayland_InputMgr, gIco_Dic_JS.device,
+                    gIco_Dic_JS_Input[ii].input, gIco_Dic_JS_Input[ii].code[jj].name,
+                    gIco_Dic_JS_Input[ii].code[jj].code);
         }
     }
 
     /* signal init  */
+    signal(SIGCHLD, SIG_IGN);
     sigint.sa_handler = signal_int;
     sigemptyset(&sigint.sa_mask);
     sigint.sa_flags = SA_RESETHAND;
     sigaction(SIGINT, &sigint, NULL);
+    sigaction(SIGTERM, &sigint, NULL);
 
     /* main loop    */
     while (gRunning) {
-        ret = ico_ictl_wayland_iterate(ev_ret, 200);
+        ret = ico_dic_wayland_iterate(ev_ret, 200);
         for (ii = 0; ii < ret; ii++) {
             if (ev_ret[ii].data.fd == JSfd) {
-                ico_ictl_js_read(JSfd);
+                ico_dic_js_read(JSfd);
             }
         }
     }
-    ico_ictl_wayland_finish();
+    ico_dic_wayland_finish();
+    ico_log_close();
 
     exit(0);
 }
 
 static void PrintUsage(const char *pName)
 {
-    fprintf( stderr, "Usage: %s [-h] [-d] DeviceName\n", pName );
+    fprintf( stderr, "Usage: %s [-h] [-d] [DeviceName]\n", pName );
     fprintf( stderr, "       ex)\n");
     fprintf( stderr, "          %s \"Driving Force GT\"\n", pName);
 }

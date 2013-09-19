@@ -5,54 +5,25 @@
 #	  Remark: This examination premises that Weston does not run.
 
 # 1 Delete log file
-rm -fr ../tests/testlog
-mkdir ../tests/testlog
+mkdir ../tests/testlog 2> /dev/null
+rm -fr ../tests/testlog/* 2> /dev/null
 
-# 2 Start Pseudo event device (for Touch Panel and Jyostick)
-../tests/test-send_event -device=ico_test_touch -d -mq=55551 2> ../tests/testlog/event_log_touch.log &
-../tests/test-send_event -device=ico_test_joystick -d -J -mq=55552 2> ../tests/testlog/event_log_joystic.log &
-sleep 1
+# 2 set weston environment
+export XDG_RUNTIME_DIR=/run/user/5000
 
 # 3 Start Device Input Controllers
-export CALIBRATOIN_CONF="../egalax_calibration.conf"
-export ICTL_TOUCH_DEV="ico_test_touch"
-#../touch_egalax/ico_ictl-touch_egalax -d -L ico_test_touch 2> ../tests/testlog/touch_egalax.log &
-../touch_egalax/ico_ictl-touch_egalax -d -L > ../tests/testlog/touch_egalax.log 2>&1 &
+export DIC_GTFORCE_CONF="../settings/g27racingwheel.conf"
+../gtforce/ico_uxf_dic-gtforce -d -L 2> ../tests/testlog/gtforce.log &
 sleep 0.5
-export ICTL_GTFORCE_CONF="../joystick_gtforce.conf"
-export ICTL_GTFORCE_DEV="ico_test_joystick"
-#../joystick_gtforce/ico_ictl-joystick_gtforce -d -l ico_test_joystick 2> ../tests/testlog/joystick_gtforce.log &
-../joystick_gtforce/ico_ictl-joystick_gtforce -d -l > ../tests/testlog/joystick_gtforce.log 2>&1 &
-sleep 1
 
-# 4 Weston/Wayland Envionment
-export XDG_RUNTIME_DIR=/tmp/run-root
-export QT_QPA_PLATFORM=wayland
-export ELM_ENGINE=wayland_egl
-export ECORE_EVAS_ENGINE=wayland_egl
-#export ELM_ENGINE=wayland_shm
-#export ECORE_EVAS_ENGINE=wayland_shm
-export EVAS_FONT_DPI=72
-export ECORE_IMF_MODULE=isf
-export ELM_MODULES="ctxpopup_copypasteUI>entry/api:datetime_input_ctxpopup>datetime/api"
-export ELM_SCALE="0.7"
-export ELM_PROFILE=mobile
+# 4 Start Weston
+/usr/bin/weston --idle-time=0 $WESTON_BACKEND --log=../tests/testlog/weston.log &
+sleep 600
 
-# 5 Start Weston
-export XDG_CONFIG_HOME="../tests"
-/usr/bin/weston --backend=drm-backend.so --idle-time=0 --log=../tests/testlog/weston.log &
-sleep 1
-
-# 5 Start test-homescreen
-../tests/test-homescreen < ../tests/testdata/hs_alltest.dat 2> ../tests/testlog/test-homescreen.log
-
-# 6 End of Test
+# 5 End of Test
 sleep 1
 /usr/bin/killall weston
-/usr/bin/killall test-send_event
-/usr/bin/killall test-send_event
-/usr/bin/killall ico_ictl-touch_egalax
-/usr/bin/killall ico_ictl-joystick_gtforce
+/usr/bin/killall ico_uxf_dic-gtforce
 sleep 1
 
 # 9 Check Error
@@ -69,11 +40,11 @@ fi
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi
-/bin/grep "error" testlog/* | /bin/grep -v "error_but_no_problem_for_test"
+/bin/grep "error" testlog/*
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi
-/bin/grep "Fail" testlog/* | /bin/grep -v "error_but_no_problem_for_test"
+/bin/grep "Fail" testlog/*
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi

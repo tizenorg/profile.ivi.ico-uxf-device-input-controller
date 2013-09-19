@@ -1,10 +1,23 @@
 /*
- * Copyright (c) 2013, TOYOTA MOTOR CORPORATION.
+ * Copyright © 2013 TOYOTA MOTOR CORPORATION.
  *
- * This program is licensed under the terms and conditions of the
- * Apache License, version 2.0.  The full text of the Apache License is at
- * http://www.apache.org/licenses/LICENSE-2.0
+ * Permission to use, copy, modify, distribute, and sell this software and
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of the copyright holders not be used in
+ * advertising or publicity pertaining to distribution of the software
+ * without specific, written prior permission.  The copyright holders make
+ * no representations about the suitability of this software for any
+ * purpose.  It is provided "as is" without express or implied warranty.
  *
+ * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 /**
  * @brief   System Test Tool for send device input event
@@ -343,11 +356,13 @@ send_event(const char *cmd)
                     print_log("Send Event Y=%d\t %d.%03d", event.value,
                               (int)event.time.tv_sec, (int)(event.time.tv_usec/1000));
                 }
-                else if ((event.type == EV_KEY) && (event.code == BTN_LEFT) && (event.value == 1))    {
+                else if ((event.type == EV_KEY) &&
+                         (event.code == BTN_LEFT) && (event.value == 1))    {
                     print_log("Send Event BTN_LEFT=Down\t# %d.%03d",
                               (int)event.time.tv_sec, (int)(event.time.tv_usec/1000));
                 }
-                else if ((event.type == EV_KEY) && (event.code == BTN_LEFT) && (event.value == 0))   {
+                else if ((event.type == EV_KEY) &&
+                         (event.code == BTN_LEFT) && (event.value == 0))   {
                     print_log("Send Event BTN_LEFT=Up\t# %d.%03d",
                               (int)event.time.tv_sec, (int)(event.time.tv_usec/1000));
                 }
@@ -401,7 +416,8 @@ send_event(const char *cmd)
 static void
 usage(const char *prog)
 {
-    fprintf(stderr, "Usage: %s [-device=device] [{-m/-t/-j}] [-mq[=key]] [-d] [event=value] [event=value] ...\n", prog);
+    fprintf(stderr, "Usage: %s [-device=device] [{-m/-t/-j}] [-mq[=key]] "
+            "[-d] [event=value] [event=value] ...\n", prog);
     exit(0);
 }
 
