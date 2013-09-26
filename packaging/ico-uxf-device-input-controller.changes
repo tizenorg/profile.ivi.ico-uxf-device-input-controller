@@ -1,3 +1,9 @@
+* Thu Sep 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130919.204300@d52ab79
+- 0.9.02 release.
+-- fix for - When Weston crashed, GtForce device input controller does an loop forever.
+-- change of the path of the ico_set_vehicleinfo tool.
+-- the start method is changed to the Wants target of the service file of ico-uxf-homescreen
+
 * Thu Sep 19 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/tizen/20130919.104803@2537721
 - 0.9.01 release.
 -- The initial release for TizenIVI 3.0.

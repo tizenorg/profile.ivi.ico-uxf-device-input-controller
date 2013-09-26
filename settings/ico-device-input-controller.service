@@ -4,7 +4,4 @@ Requires=weston.service
 After=weston.service
 
 [Service]
-#Environment=XDG_RUNTIME_DIR=/run/user/5000
-Type=oneshot
 ExecStart=/usr/bin/ico_dic-gtforce -d
-

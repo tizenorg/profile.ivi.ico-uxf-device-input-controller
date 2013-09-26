@@ -1,9 +1,0 @@
-Description=Path activation for ico-device-input-controller
-
-[Path]
-PathExists=/run/user/5000/wayland-0.lock
-#PathExists=/tmp/amd_ready
-Unit=ico-device-input-controller.service
-
-[Install]
-WantedBy=weston.target 
