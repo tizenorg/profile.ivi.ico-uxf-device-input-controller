@@ -78,6 +78,7 @@ ico_dic_wayland_init(const char *display, Ico_Dic_Wayland_Cb callback)
 
     /* display dispatch to wait     */
     do  {
+        usleep(20*1000);
         wl_display_dispatch(gIco_Dic_Mng.Wayland_Display);
     } while ((gIco_Dic_Mng.Wayland_WindowMgr == NULL) ||
              (gIco_Dic_Mng.Wayland_InputCtl == NULL) ||

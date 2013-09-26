@@ -674,8 +674,8 @@ ico_dic_js_read(int fd)
                         iMng->code[icode].appid, iMng->code[icode].keycode, state);
                 ico_input_mgr_control_send_input_event(gIco_Dic_Mng.Wayland_InputCtl,
                                                        iMng->code[icode].appid, 0,
-                                                       ICO_INPUT_MGR_DEVICE_TYPE_KEYBOARD,
-                                                       0, iMng->code[icode].keycode, state);
+                                                       ICO_INPUT_MGR_DEVICE_TYPE_KEYBOARD, 0,
+                                                       0,iMng->code[icode].keycode, state);
             }
         }
         else    {

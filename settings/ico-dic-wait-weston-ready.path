@@ -1,4 +1,4 @@
-Description=Path activation for ico-device-input-controller
+# Description=Path activation for ico-device-input-controller
 
 [Path]
 PathExists=/run/user/5000/wayland-0.lock
