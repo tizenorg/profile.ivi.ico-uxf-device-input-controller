@@ -37,14 +37,13 @@ rm -rf %{buildroot}
 # configurations
 %define ictl_conf /opt/etc/ico/device-input-controller
 mkdir -p %{buildroot}%{ictl_conf}
+mkdir -p %{buildroot}%{_unitdir_user}
 install -m 0644 settings/drivingforcegt.conf %{buildroot}%{ictl_conf}
 install -m 0644 settings/g27racingwheel.conf %{buildroot}%{ictl_conf}
 install -m 0755 settings/set_daynight.sh %{buildroot}%{ictl_conf}
 install -m 0755 settings/set_navi_busguide.sh %{buildroot}%{ictl_conf}
 install -m 0755 settings/set_navi_destination.sh %{buildroot}%{ictl_conf}
-install -d %{buildroot}/%{_unitdir_user}/weston.target.wants
 install -m 644 settings/ico-device-input-controller.service %{buildroot}%{_unitdir_user}/ico-device-input-controller.service
-ln -sf ../ico-dic-wait-weston-ready.path %{buildroot}/%{_unitdir_user}/weston.target.wants/
 
 %files
 %defattr(-,root,root,-)
@@ -55,4 +54,3 @@ ln -sf ../ico-dic-wait-weston-ready.path %{buildroot}/%{_unitdir_user}/weston.ta
 %{ictl_conf}/set_navi_busguide.sh
 %{ictl_conf}/set_navi_destination.sh
 /usr/lib/systemd/user/ico-device-input-controller.service
-/usr/lib/systemd/user/weston.target.wants/ico-dic-wait-weston-ready.path
