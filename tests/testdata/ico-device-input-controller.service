@@ -1,0 +1,7 @@
+[Unit]
+Description=ico device input controller
+Requires=weston.service
+After=weston.service
+
+[Service]
+ExecStart=/usr/bin/ico_dic-gtforce -d

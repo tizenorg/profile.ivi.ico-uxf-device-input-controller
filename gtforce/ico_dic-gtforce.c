@@ -660,7 +660,7 @@ ico_dic_js_read(int fd)
                 if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
                     ICO_DBG("ico_dic_js_read: start script(%s)", iMng->code[icode].appid);
                     if (system(iMng->code[icode].appid) == -1)  {
-                        ICO_WRN("ico_dic_js_read: script(%s) Error",
+                        ICO_DBG("ico_dic_js_read: script(%s) ret -1",
                                 iMng->code[icode].appid);
                     }
                 }
@@ -737,6 +737,10 @@ int main(int argc, char *argv[])
             /* debug    */
             mDebug = 2;
         }
+        else if (strcmp( argv[ii], "-Dstdout") == 0) {
+            /* debug    */
+            mDebug = 3;
+        }
         else if (strcasecmp( argv[ii], "-l") == 0) {
             /* event input log  */
             mEventLog = 1;
@@ -755,7 +759,7 @@ int main(int argc, char *argv[])
     }
 
     /* set log name     */
-    ico_log_open("ico_dic-gtforce");
+    ico_log_open(mDebug != 3 ? "ico_dic-gtforce" : NULL);
 
     /* read conf file   */
     confpath = getenv(ICO_DIC_CONF_ENV);

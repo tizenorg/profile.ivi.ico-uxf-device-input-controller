@@ -19,4 +19,3 @@ ico_dic_gtforce_SOURCES = \
 	ico_dic-gtforce.c		\
 	ico_dic-wayland.c
 ico_dic_gtforce_LDADD = $(SIMPLE_CLIENT_LIBS) $(wayland_ivi_client_lib) $(wayland_client_lib)
-

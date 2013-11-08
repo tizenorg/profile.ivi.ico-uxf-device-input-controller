@@ -1,3 +1,8 @@
+* Fri Nov 08 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20131004.165240@340a57b
+- 0.9.03 release
+-- addition: Home/Back and Menu buttons addition of the steering switch.
+-- bug fix: package test script(tests/input-controller-test) error.
+
 * Thu Sep 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20130919.204300@d52ab79
 - 0.9.02 release.
 -- fix for - When Weston crashed, GtForce device input controller does an loop forever.

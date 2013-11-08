@@ -1,6 +1,6 @@
 AC_PREREQ([2.68])
 AC_INIT([ico-uxf-device-input-controller],
-        [0.9.01],
+        [0.9.03],
         [https://BUG-REPORT-ADDRESS])
 
 AC_CONFIG_HEADERS([config.h])

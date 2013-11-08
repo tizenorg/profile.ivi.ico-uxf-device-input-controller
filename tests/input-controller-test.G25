@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	Device Input Controller Test for G27 steering switch
+#	Device Input Controller Test for G25 steering switch
 #
 #	  Remark: This examination premises that Weston does not run.
 
@@ -12,7 +12,7 @@ rm -fr ../tests/testlog/* 2> /dev/null
 export XDG_RUNTIME_DIR=/run/user/5000
 
 # 3 Start Device Input Controllers
-export DIC_GTFORCE_CONF="./testdata/g27racingwheel.conf"
+export DIC_GTFORCE_CONF="./testdata/drivingforcegt.conf"
 ../gtforce/ico_dic-gtforce -Dstdout -L > ../tests/testlog/gtforce.log 2>&1 &
 sleep 0.5
 
