@@ -1,3 +1,8 @@
+* Fri Nov 29 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen_ivi_stable/20131119.040206@f02120b
+- 0.9.04 release
+-- bug fix: A package test script(tests/input-controller-test) becomes the error by a timing
+-- revise: Revise a package test to Wayland 1.3.0 and Weston 1.3.1 
+
 * Fri Nov 08 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/20131004.165240@340a57b
 - 0.9.03 release
 -- addition: Home/Back and Menu buttons addition of the steering switch.

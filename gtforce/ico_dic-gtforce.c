@@ -575,7 +575,7 @@ ico_dic_js_read(int fd)
             }
             continue;
         }
-        ICO_DBG("ico_dic_js_read: Read(type=%d, number=%d, value=%d)",
+        ICO_PRF("SWITCH_EVENT Read(type=%d, number=%d, value=%d)",
                 type, number, value);
 
         if (mEventLog)  {
@@ -658,7 +658,7 @@ ico_dic_js_read(int fd)
             if (iMng->code[icode].keycode < 0)  {
                 /* start program if pressed */
                 if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-                    ICO_DBG("ico_dic_js_read: start script(%s)", iMng->code[icode].appid);
+                    ICO_PRF("SWITCH_EVENT start script(%s)", iMng->code[icode].appid);
                     if (system(iMng->code[icode].appid) == -1)  {
                         ICO_DBG("ico_dic_js_read: script(%s) ret -1",
                                 iMng->code[icode].appid);
@@ -670,7 +670,7 @@ ico_dic_js_read(int fd)
                 if (state == WL_KEYBOARD_KEY_STATE_PRESSED) state = 1;
                 else                                        state = 0;
 
-                ICO_DBG("ico_dic_js_read: send event to %s(%d.%d)",
+                ICO_PRF("SWITCH_EVENT send event to %s(%d.%d)",
                         iMng->code[icode].appid, iMng->code[icode].keycode, state);
                 ico_input_mgr_control_send_input_event(gIco_Dic_Mng.Wayland_InputCtl,
                                                        iMng->code[icode].appid, 0,
@@ -680,7 +680,7 @@ ico_dic_js_read(int fd)
         }
         else    {
             /* general switch event, send to multi input manager    */
-            ICO_DBG("ico_dic_js_read: send general input event(%s.%d.%d.%d)",
+            ICO_PRF("SWITCH_EVENT send general input event(%s.%d.%d.%d)",
                     gIco_Dic_JS.device, iMng->input, code, state);
             ico_input_mgr_device_input_event(gIco_Dic_Mng.Wayland_InputMgr, events[ii].time,
                                              gIco_Dic_JS.device, iMng->input, code, state);

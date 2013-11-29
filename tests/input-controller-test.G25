@@ -17,13 +17,15 @@ export DIC_GTFORCE_CONF="./testdata/drivingforcegt.conf"
 sleep 0.5
 
 # 4 Start Weston
-/usr/bin/weston --idle-time=0 $WESTON_BACKEND --log=../tests/testlog/weston.log &
+/usr/bin/weston --tty=1 --idle-time=0 $WESTON_BACKEND --log=../tests/testlog/weston.log &
 sleep 180
 
 # 5 End of Test
 sleep 1
 /usr/bin/killall ico_dic-gtforce
-sleep 0.2
+sleep 0.4
+/usr/bin/killall -9 ico_dic-gtforce > /dev/nul 2>&1
+sleep 0.1
 /usr/bin/killall weston
 sleep 1
 
@@ -45,7 +47,7 @@ fi
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi
-/bin/grep "Fail" testlog/* | /bin/grep -v "error_but_no_problem_for_test" | /bin/grep -v "initialize backlight"
+/bin/grep "Fail" testlog/* | /bin/grep -v "error_but_no_problem_for_test" | /bin/grep -v "initialize backlight" | /bin/grep -v "disconnect"
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi
