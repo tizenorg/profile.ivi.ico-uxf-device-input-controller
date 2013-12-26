@@ -4,4 +4,5 @@ Requires=weston.service
 After=weston.service
 
 [Service]
-ExecStart=/usr/bin/ico_dic-gtforce -d
+Environment=XDG_RUNTIME_DIR=/run/user/5000
+ExecStart=/usr/bin/ico_dic-gtforce -d --user app

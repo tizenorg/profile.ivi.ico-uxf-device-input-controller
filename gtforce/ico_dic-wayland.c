@@ -177,6 +177,8 @@ ico_dic_wayland_iterate(struct epoll_event *ev_ret, int timeout)
                     errcount ++;
                     if (errcount > 50)  {
                         ICO_ERR("ico_dic_wayland_iterate: Error wayland disconnect");
+                        ICO_INF("END_MODULE GtForce device input controller"
+                                "(Error: wayland disconnect)");
                         exit(9);
                     }
                     if ((errcount % 5) == 0)    {
@@ -249,4 +251,3 @@ ico_dic_wayland_finish(void)
 
     ICO_DBG("ico_dic_wayland_finish: Leave");
 }
-

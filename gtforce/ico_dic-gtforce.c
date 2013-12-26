@@ -255,6 +255,7 @@ ico_dic_read_conf(const char *file)
     gIco_Dic_JS_Input = (Ico_Dic_JS_Input *)malloc(sizeof(Ico_Dic_JS_Input) * length);
     if (! gIco_Dic_JS_Input)  {
         ICO_ERR("joystick_gtforce: No Memory");
+        ICO_INF("END_MODULE GtForce device input controller(Error: No Memory)");
         exit(1);
     }
     memset((char *)gIco_Dic_JS_Input, 0, sizeof(Ico_Dic_JS_Input) * length);
@@ -347,6 +348,10 @@ ico_dic_read_conf(const char *file)
                             iMng->code[kk].appid[ll] = *p;
                             p++;
                         }
+                        if ((ll == 0) || (iMng->code[kk].appid[0] == '@'))  {
+                            iMng->code[kk].appid[0] = ' ';
+                            iMng->code[kk].appid[1] = 0;
+                        }
                         if (*p) {
                             p ++;
                             if (strncasecmp(p, "key=", 4) == 0) p += 4;
@@ -370,6 +375,10 @@ ico_dic_read_conf(const char *file)
                                     if ((*p == 0) || (*p == ':'))   break;
                                     iMng->code[0].appid[ll] = *p;
                                     p++;
+                                }
+                                if ((ll == 0) || (iMng->code[kk].appid[0] == '@'))  {
+                                    iMng->code[kk].appid[0] = ' ';
+                                    iMng->code[kk].appid[1] = 0;
                                 }
                                 if (*p) {
                                     p ++;
@@ -432,7 +441,8 @@ ico_dic_js_open(const char *dicDevName, char **confpath)
     char                devName[64];
     int                 ii, jj, kk;
 
-    ICO_TRA("ico_dic_js_open: Enter(device=%s, conf=%s)", dicDevName,
+    ICO_TRA("ico_dic_js_open: Enter(device=%s, conf=%s)",
+            dicDevName ? dicDevName : "(null)",
             *confpath ? *confpath : "(null)");
 
     char *pdev = getenv(ICO_DIC_INPUT_DEV);
@@ -490,6 +500,9 @@ ico_dic_js_open(const char *dicDevName, char **confpath)
                 conf_fd = open(fixconfpath, O_RDONLY);
                 if (conf_fd < 0)    continue;
                 close(conf_fd);
+            }
+            else    {
+                strncpy(fixconfpath, *confpath, sizeof(fixconfpath));
             }
             break;
         }
@@ -559,6 +572,7 @@ ico_dic_js_read(int fd)
             return;
         }
         ICO_ERR("ico_dic_js_read: read error[%d]", ii)
+        ICO_INF("END_MODULE GtForce device input controller(Error: Device Read Error)");
         exit(9);
     }
     for (ii = 0; ii < (rSize / (int)sizeof(struct js_event)); ii++) {
@@ -745,6 +759,15 @@ int main(int argc, char *argv[])
             /* event input log  */
             mEventLog = 1;
         }
+        else if (strcasecmp( argv[ii], "--user") == 0) {
+            ii ++;
+            if (ii < argc)  {
+                if (strcmp(argv[ii], cuserid(NULL)) != 0)    {
+                    printf("ico_dic-gtforce: abort(cannot run in a '%s')\n", cuserid(NULL));
+                    exit(9);
+                }
+            }
+        }
         else {
             dicDevName = argv[ii];
         }
@@ -760,6 +783,7 @@ int main(int argc, char *argv[])
 
     /* set log name     */
     ico_log_open(mDebug != 3 ? "ico_dic-gtforce" : NULL);
+    ICO_INF("START_MODULE GtForce device input controller");
 
     /* read conf file   */
     confpath = getenv(ICO_DIC_CONF_ENV);
@@ -768,6 +792,7 @@ int main(int argc, char *argv[])
     JSfd = ico_dic_js_open(dicDevName, &confpath);
     if (JSfd < 0) {
         ICO_ERR("main: Leave(Error device open)");
+        ICO_INF("END_MODULE GtForce device input controller(Error: Device Open Error)");
         exit(1);
     }
     gIco_Dic_JS.fd = JSfd;
@@ -775,12 +800,14 @@ int main(int argc, char *argv[])
     /* read conf file   */
     if (ico_dic_read_conf(confpath) == ICO_DIC_ERR) {
         ICO_ERR("main: Leave(Error can not read configfile(%s))", confpath);
+        ICO_INF("END_MODULE GtForce device input controller(Error: config file Read Error");
         exit(1);
     }
 
     /* initialize wayland   */
     if (ico_dic_wayland_init(NULL, NULL) == ICO_DIC_ERR)    {
         ICO_ERR("main: Leave(Error can not connect to wayland)");
+        ICO_INF("END_MODULE GtForce device input controller(Error: Can not connect to wayland)");
         exit(1);
     }
     ico_dic_add_fd(JSfd);
@@ -819,6 +846,8 @@ int main(int argc, char *argv[])
         }
     }
     ico_dic_wayland_finish();
+
+    ICO_INF("END_MODULE GtForce device input controller");
     ico_log_close();
 
     exit(0);
@@ -830,4 +859,3 @@ static void PrintUsage(const char *pName)
     fprintf( stderr, "       ex)\n");
     fprintf( stderr, "          %s \"Driving Force GT\"\n", pName);
 }
-

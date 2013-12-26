@@ -1,6 +1,6 @@
 Name:       ico-uxf-device-input-controller
 Summary:    Device Input Controller
-Version:    0.9.04
+Version:    0.9.05
 Release:    1.1
 Group:      System/GUI
 License:    Apache License, Version 2.0
@@ -44,6 +44,7 @@ install -m 0755 settings/set_daynight.sh %{buildroot}%{ictl_conf}
 install -m 644 settings/ico-device-input-controller.service %{buildroot}%{_unitdir_user}/ico-device-input-controller.service
 
 %files
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 %{_bindir}/ico_dic-gtforce
 %{ictl_conf}/drivingforcegt.conf

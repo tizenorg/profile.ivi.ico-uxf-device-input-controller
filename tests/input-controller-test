@@ -10,6 +10,7 @@ rm -fr ../tests/testlog/* 2> /dev/null
 
 # 2 set weston environment
 export XDG_RUNTIME_DIR=/run/user/5000
+export XDG_CONFIG_HOME="../tests"
 
 # 3 Start Device Input Controllers
 export DIC_GTFORCE_CONF="./testdata/g27racingwheel.conf"
@@ -17,7 +18,7 @@ export DIC_GTFORCE_CONF="./testdata/g27racingwheel.conf"
 sleep 0.5
 
 # 4 Start Weston
-/usr/bin/weston --tty=1 --idle-time=0 $WESTON_BACKEND --log=../tests/testlog/weston.log &
+/usr/bin/weston --tty=2 --idle-time=0 $WESTON_BACKEND --log=../tests/testlog/weston.log &
 sleep 180
 
 # 5 End of Test
@@ -43,9 +44,9 @@ fi
 if [ "$?" != "1" ] ; then
 	FOUND_ERR=1
 fi
-/bin/grep "error" testlog/*
+/bin/grep "error" testlog/* | /bin/grep -v "error_but_no_problem_for_test" | /bin/grep -v "failed to restore kb mode:" | /bin/grep -v "failed to set KD_TEXT mode on tty:"
 if [ "$?" != "1" ] ; then
-	FOUND_ERR=1
+    FOUND_ERR=1
 fi
 /bin/grep "Fail" testlog/* | /bin/grep -v "error_but_no_problem_for_test" | /bin/grep -v "initialize backlight" | /bin/grep -v "disconnect"
 if [ "$?" != "1" ] ; then

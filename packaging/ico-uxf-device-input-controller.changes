@@ -1,3 +1,8 @@
+* Thu Dec 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/tizen/20131219.041510@b8c013a
+- 0.9.05 release
+-- revise: add manifest file for SMACK label setting
+-- revise: add process start/end log
+
 * Fri Nov 29 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen_ivi_stable/20131119.040206@f02120b
 - 0.9.04 release
 -- bug fix: A package test script(tests/input-controller-test) becomes the error by a timing
