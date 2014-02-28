@@ -1,21 +1,21 @@
 Name:       ico-uxf-device-input-controller
 Summary:    Device Input Controller
-Version:    0.9.05
+Version:    0.9.06
 Release:    1.1
 Group:      System/GUI
 License:    Apache License, Version 2.0
 URL:        ""
 Source0:    %{name}-%{version}.tar.bz2
 
-BuildRequires: pkgconfig(wayland-client) >= 1.2.0
+BuildRequires: pkgconfig(wayland-client) >= 1.4.0
 BuildRequires: mesa-devel
 BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(glib-2.0)
-BuildRequires: ico-uxf-weston-plugin-devel >= 0.9.07
+BuildRequires: ico-uxf-weston-plugin-devel >= 0.9.21
 BuildRequires: ico-uxf-utilities-devel >= 0.9.01
-Requires: weston >= 1.2.2
-Requires: ico-uxf-weston-plugin >= 0.9.07
+Requires: weston >= 1.4.0
+Requires: ico-uxf-weston-plugin >= 0.9.21
 Requires: ico-uxf-utilities >= 0.9.01
 
 %description

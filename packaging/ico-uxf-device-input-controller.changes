@@ -1,3 +1,7 @@
+* Fri Feb 28 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/20140129.180655@86233eb
+- 0.9.06 release
+-- It changes so that the layer controlling function of GENIVI may be used for surface management and layer management.
+
 * Thu Dec 26 2013 Shibata Makoto <shibata@mac.tec.toyota.co.jp> submit/tizen/20131219.041510@b8c013a
 - 0.9.05 release
 -- revise: add manifest file for SMACK label setting
