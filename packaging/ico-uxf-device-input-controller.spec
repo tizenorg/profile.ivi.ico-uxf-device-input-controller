@@ -3,7 +3,7 @@ Summary:    Device Input Controller
 Version:    0.9.06
 Release:    1.1
 Group:      System/GUI
-License:    Apache License, Version 2.0
+License:    Apache-2.0
 URL:        ""
 Source0:    %{name}-%{version}.tar.bz2
 
