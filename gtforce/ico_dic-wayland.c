@@ -162,7 +162,7 @@ ico_dic_wayland_iterate(struct epoll_event *ev_ret, int timeout)
 {
     int nfds;
     int ii;
-    static int  errcount = 0;
+    static uint32_t repert = 0;
 
     memset(ev_ret, 0, sizeof(struct epoll_event) * ICO_DIC_EVENT_NUM);
     wl_display_flush(gIco_Dic_Mng.Wayland_Display);
@@ -173,20 +173,16 @@ ico_dic_wayland_iterate(struct epoll_event *ev_ret, int timeout)
             for (ii = 0; ii < nfds; ii++) {
                 if (ev_ret[ii].data.fd == gIco_Dic_Mng.WaylandFd) {
                     wl_display_dispatch(gIco_Dic_Mng.Wayland_Display);
-                    ICO_DBG("ico_dic_wayland_iterate: Event wayland fd");
-                    errcount ++;
-                    if (errcount > 50)  {
-                        ICO_ERR("ico_dic_wayland_iterate: Error wayland disconnect");
-                        ICO_INF("END_MODULE GtForce device input controller"
-                                "(Error: wayland disconnect)");
-                        exit(9);
-                    }
-                    if ((errcount % 5) == 0)    {
-                        usleep(50*1000);
+                    repert ++;
+                    if ((repert % 5) == 0)  {
+                        if (repert % 100)   {
+                            ICO_DBG("ico_dic_wayland_iterate: Event wayland fd");
+                        }
+                        usleep(20*1000);
                     }
                 }
                 else    {
-                    errcount = 0;
+                    repert = 0;
                 }
             }
             return nfds;

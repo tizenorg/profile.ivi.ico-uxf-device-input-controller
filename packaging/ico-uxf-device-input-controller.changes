@@ -1,3 +1,8 @@
+* Wed Mar 26 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/release/20140312.124735@9827dd3
+- Delete test_send_event tool (It is contained in weston-plugin by the name of ico_send_inputevent).
+- Correction of the review indication from a Tizen team.
+- bug fix: It will end, if many events come from Weston continuously.
+
 * Fri Feb 28 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/20140129.180655@86233eb
 - 0.9.06 release
 -- It changes so that the layer controlling function of GENIVI may be used for surface management and layer management.

@@ -23,10 +23,6 @@
 #include    <linux/joystick.h>
 #include    <glib.h>
 
-#ifndef __USE_XOPEN
-extern char *cuserid (char *__s);
-#endif
-
 #include    "ico_dic-gtforce.h"
 
 /* type definition                                                                  */

@@ -4,7 +4,7 @@ wayland_client_lib = -lwayland-client
 wayland_ivi_client_lib = -lico-uxf-weston-plugin
 wayland_ivi_client_inc = -I/usr/include/ico-uxf-weston-plugin
 
-AM_CFLAGS = $(GCC_CFLAGS) -I/usr/include/ico-util
+AM_CFLAGS = $(GCC_CFLAGS) -D_XOPEN_SOURCE -D_BSD_SOURCE -I/usr/include/ico-util
 AM_CPPFLAGS = -I$(top_srcdir)/src $(wayland_ivi_client_inc) $(GLIB_CFLAGS) $(COMPOSITOR_CFLAGS)
 
 bin_PROGRAMS =		\
