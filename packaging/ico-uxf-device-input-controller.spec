@@ -1,6 +1,6 @@
 Name:       ico-uxf-device-input-controller
 Summary:    Device Input Controller
-Version:    0.9.06
+Version:    0.9.07
 Release:    1.1
 Group:      System/GUI
 License:    Apache License, Version 2.0

@@ -1,3 +1,7 @@
+* Mon May 26 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/panda/20140403.020032@99a84e7
+- 0.9.07 release
+-- bug fix: The window name has fallen out to the definition of the switch for HomeScreen at the configuration file.
+
 * Wed Mar 26 2014 Shibata Makoto <shibata@mac.tec.toyota.co.jp> accepted/tizen/ivi/release/20140312.124735@9827dd3
 - Delete test_send_event tool (It is contained in weston-plugin by the name of ico_send_inputevent).
 - Correction of the review indication from a Tizen team.
