@@ -7,6 +7,8 @@ License:    Apache License, Version 2.0
 URL:        ""
 Source0:    %{name}-%{version}.tar.bz2
 
+ExclusiveArch:  %ix86 x86_64
+
 BuildRequires: pkgconfig(wayland-client) >= 1.4.0
 BuildRequires: mesa-devel
 BuildRequires: pkgconfig(egl)
