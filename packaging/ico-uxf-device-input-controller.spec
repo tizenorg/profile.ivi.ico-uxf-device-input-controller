@@ -1,10 +1,11 @@
+%define ictl_conf /opt/etc/ico/device-input-controller
+
 Name:       ico-uxf-device-input-controller
 Summary:    Device Input Controller
 Version:    0.9.06
-Release:    1.1
-Group:      System/GUI
-License:    Apache License, Version 2.0
-URL:        ""
+Release:    0
+Group:      Graphics & UI Framework/Input
+License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.bz2
 
 BuildRequires: pkgconfig(wayland-client) >= 1.4.0
@@ -25,17 +26,14 @@ Device Input Controller for ico-uxf-weston-plugin(Multi Input Manager)
 %setup -q -n %{name}-%{version}
 
 %build
-%autogen
-
-%configure
-make %{?_smp_mflags}
+%reconfigure
+%__make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}
 %make_install
 
 # configurations
-%define ictl_conf /opt/etc/ico/device-input-controller
 mkdir -p %{buildroot}%{ictl_conf}
 mkdir -p %{buildroot}%{_unitdir_user}
 install -m 0644 settings/drivingforcegt.conf %{buildroot}%{ictl_conf}
@@ -50,4 +48,4 @@ install -m 644 settings/ico-device-input-controller.service %{buildroot}%{_unitd
 %{ictl_conf}/drivingforcegt.conf
 %{ictl_conf}/g27racingwheel.conf
 %{ictl_conf}/set_daynight.sh
-/usr/lib/systemd/user/ico-device-input-controller.service
+%{_unitdir_user}/ico-device-input-controller.service
